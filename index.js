@@ -64,15 +64,15 @@ instance.prototype.init_keystates = function() {
 		self.CHOICES_BUTTONS.push(labelObj);
 
 		let variableObj = {};
-		variableObj.name = 'button_' + i + '_text';
-		variableObj.label = 'Button ' + i + ' Text';
+		variableObj.name = 'button_' + (i+1) + '_text';
+		variableObj.label = 'Button ' + (i+1) + ' Text';
 		self.VARIABLES.push(variableObj);
 	}
 
 	self.setVariableDefinitions(self.VARIABLES);
 
 	for (let i = 0; i < 80; i++) {
-		self.setVariable('button_' + i + '_text', 'Button ' + (i+1));
+		self.setVariable('button_' + (i+1) + '_text', 'Button ' + (i+1));
 	}
 
 	self.actions(); // export actions
@@ -495,7 +495,7 @@ instance.prototype.SetText = function(buttonNumber, text) {
 		}
 	}
 
-	self.setVariable('button_' + buttonNumber + '_text', text);
+	self.setVariable('button_' + (buttonNumber+1) + '_text', text);
 };
 
 instance.prototype.SetBlue = function(buttonNumber, value) {
