@@ -18,6 +18,8 @@ function instance(system, id, config) {
 	return self;
 }
 
+const API_BUTTONS = 80;
+
 instance.prototype.keyStates = [];
 instance.prototype.CHOICES_BUTTONS = [];
 
@@ -51,7 +53,7 @@ instance.prototype.init_keystates = function() {
 	self.CHOICES_BUTTONS = [];
 	self.VARIABLES = [];
 
-	for (let i = 0; i < 80; i++) {
+	for (let i = 0; i < API_BUTTONS; i++) {
 		let keyObj = {};
 		keyObj.buttonNumber = i;
 		keyObj.blue = false;
@@ -71,7 +73,7 @@ instance.prototype.init_keystates = function() {
 
 	self.setVariableDefinitions(self.VARIABLES);
 
-	for (let i = 0; i < 80; i++) {
+	for (let i = 0; i < API_BUTTONS; i++) {
 		self.setVariable('button_' + (i+1) + '_text', 'Button ' + (i+1));
 	}
 
@@ -199,13 +201,13 @@ instance.prototype.init_presets = function() {
 	var self = this;
 	var presets = [];
 
-	for (let i = 0; i < 80; i++) {
+	for (let i = 0; i < API_BUTTONS; i++) {
 		presets.push({
 			category: 'Buttons',
 			label: 'Button ' + (i+1),
 			bank: {
 				style: 'text',
-				text: `$(unityintercom-client:button_${i}_text)`,
+				text: `$(unityintercom-client:button_${(i+1)}_text)`,
 				size: '14',
 				color: '16777215',
 				bgcolor: self.rgb(0, 0, 0)
@@ -266,22 +268,27 @@ instance.prototype.init_udp = function() {
 	}
 
 	if (self.config.host !== undefined) {
-		self.udp = dgram.createSocket('udp4');
-		self.udp.bind(self.config.port);
-
-		self.udp.on('error', function (err) {
-			debug('Network error', err);
-			self.status(self.STATE_ERROR, err);
-			self.log('error','Network error: ' + err.message);
-		});
-
-		self.udp.on('message', function (data, rinfo) {
-			self.processFeedback(data.toString(), rinfo.address, rinfo.port);
-		});
-
-		self.udp.on('status_change', function (status, message) {
-			self.status(status, message);
-		});
+		try {
+			self.udp = dgram.createSocket('udp4');
+			self.udp.bind(self.config.port);
+	
+			self.udp.on('error', function (err) {
+				debug('Network error', err);
+				self.status(self.STATE_ERROR, err);
+				self.log('error','Network error: ' + err.message);
+			});
+	
+			self.udp.on('message', function (data, rinfo) {
+				self.processFeedback(data.toString(), rinfo.address, rinfo.port);
+			});
+	
+			self.udp.on('status_change', function (status, message) {
+				self.status(status, message);
+			});
+		}
+		catch (error) {
+			self.log('error', 'Error binding UDP Port: ' + error);
+		}
 	}
 };
 
