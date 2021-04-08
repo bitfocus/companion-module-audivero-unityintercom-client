@@ -166,6 +166,8 @@ instance.prototype.init_feedbacks = function() {
 
 instance.prototype.feedback = function(feedback, bank) {
 	var self = this;
+
+	feedback.options.button = parseInt(feedback.options.button);
 	
 	if (feedback.type == 'blue') {
 		var buttonObj = self.keyStates.find(k => k.buttonNumber === feedback.options.button);
@@ -360,7 +362,7 @@ instance.prototype.actions = function() {
 					type: 'dropdown',
 					label: 'Button',
 					id: 'button',
-					default: '1',
+					default: '0',
 					choices: self.CHOICES_BUTTONS
 				}
 			]
@@ -372,6 +374,7 @@ instance.prototype.actions = function() {
 					type: 'dropdown',
 					label: 'Button',
 					id: 'button',
+					default: '0',
 					choices: self.CHOICES_BUTTONS
 				}
 			]
