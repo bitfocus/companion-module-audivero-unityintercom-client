@@ -336,7 +336,6 @@ instance.prototype.destroy = function() {
 
 	if (self.udp !== undefined) {
 		try {
-			self.udp.socket.removeAllListeners();
 			self.udp.close();
 		}
 		catch (error) {
