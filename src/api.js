@@ -1,7 +1,5 @@
 
-const { InstanceStatus, UDPHelper } = require('@companion-module/base')
-
-const dgram = require('dgram');
+const { InstanceStatus } = require('@companion-module/base')
 
 const VERSION = require('../package.json').version;
 
@@ -17,7 +15,10 @@ module.exports = {
 	
 		if (self.config.host !== undefined) {
 			try {
-				self.udp = dgram.createSocket('udp4');
+				self.udp = self.createSharedUdpSocket('udp4', (msg, rinfo) => self.checkMessage(self, msg, rinfo))
+				/*
+				
+				*/
 				self.udp.bind(self.config.port);
 		
 				self.udp.on('error', function (err) {
@@ -67,13 +68,22 @@ module.exports = {
 		}
 	},
 
+	checkMessage(self, msg, rinfo) {
+		try {
+			if (rinfo.address == self.config.host) { //if the remote address isn't our configured host, it's just some other Unity client
+				self.config.remoteport = port;
+				self.processFeedback(msg.toString(), rinfo.address, rinfo.port);				
+			}
+		} catch (err) {
+			self.log('error', `UDP error: ${err.message}`)
+		}
+	},
+
 	processFeedback: function(data, address, port) {
 		let self = this;
 	
 		let objJson;
 	
-		if (address === self.config.host) { //if the remote address isn't our configured host, it's just some other Unity client
-			self.config.remoteport = port;
 	
 			try {
 				objJson = JSON.parse(data);
@@ -108,7 +118,7 @@ module.exports = {
 
 				console.log(objJson);
 			}
-		}	
+		
 	},
 
 	SendPollResponse: function() {
