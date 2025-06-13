@@ -2,7 +2,7 @@ const { Regex } = require('@companion-module/base')
 
 module.exports = {
 	getConfigFields() {
-		let self = this;
+		let self = this
 
 		return [
 			{
@@ -18,7 +18,7 @@ module.exports = {
 				label: 'IP Address',
 				width: 6,
 				default: '127.0.0.1',
-				regex: Regex.IP
+				regex: Regex.IP,
 			},
 			{
 				type: 'textinput',
@@ -26,22 +26,22 @@ module.exports = {
 				label: 'Port',
 				width: 6,
 				default: 20119,
-				regex: Regex.PORT
+				regex: Regex.PORT,
 			},
 			{
 				type: 'static-text',
 				id: 'info2',
 				label: 'Verbose Logging',
 				width: 12,
-				value: `Enabling this option will put more detail in the log, which can be useful for troubleshooting purposes.`
+				value: `Enabling this option will put more detail in the log, which can be useful for troubleshooting purposes.`,
 			},
 			{
 				type: 'checkbox',
 				id: 'verbose',
 				label: 'Enable Verbose Logging',
 				default: false,
-				width: 12
+				width: 12,
 			},
 		]
-	}
+	},
 }

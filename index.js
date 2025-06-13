@@ -25,33 +25,31 @@ class unityintercomInstance extends InstanceBase {
 			...api,
 		})
 
-		this.udp = null; //used for UDP communication
+		this.udp = null //used for UDP communication
 
-		this.API_BUTTONS = 80;
+		this.API_BUTTONS = 80
 
-		this.keyStates = [];
-		this.CHOICES_BUTTONS = [];
+		this.keyStates = []
+		this.CHOICES_BUTTONS = []
 
-		this.POLL_TIMER = null;
+		this.POLL_TIMER = null
 	}
 
 	async destroy() {
-		let self = this;
+		let self = this
 
 		if (self.POLL_TIMER !== null) {
-			clearInterval(self.POLL_TIMER);
-			self.POLL_TIMER = null;
+			clearInterval(self.POLL_TIMER)
+			self.POLL_TIMER = null
 		}
-	
+
 		if (self.udp !== undefined) {
 			try {
-				self.udp.close();
-			}
-			catch (error) {
-				debug('Error closing UDP port');
-			}
-			finally {
-				self.udp = null;
+				self.udp.close()
+			} catch (error) {
+				debug('Error closing UDP port')
+			} finally {
+				self.udp = null
 			}
 		}
 	}
@@ -64,23 +62,23 @@ class unityintercomInstance extends InstanceBase {
 		this.config = config
 
 		if (this.config.verbose) {
-			this.log('info', 'Verbose mode enabled. Log entries will contain detailed information.');
+			this.log('info', 'Verbose mode enabled. Log entries will contain detailed information.')
 		}
-	
-		this.updateStatus(InstanceStatus.Connecting);
 
-		this.init_keystates();
+		this.updateStatus(InstanceStatus.Connecting)
 
-		this.init_udp();
+		this.init_keystates()
 
-		this.initActions();
-		this.initFeedbacks();
-		this.initVariables();
-		this.initPresets();
-	
-		this.checkFeedbacks();
-		this.checkVariables();
+		this.init_udp()
+
+		this.initActions()
+		this.initFeedbacks()
+		this.initVariables()
+		this.initPresets()
+
+		this.checkFeedbacks()
+		this.checkVariables()
 	}
 }
 
-runEntrypoint(unityintercomInstance, UpgradeScripts);
+runEntrypoint(unityintercomInstance, UpgradeScripts)

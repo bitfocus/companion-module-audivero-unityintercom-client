@@ -21,10 +21,6 @@
 		"entrypoint": "../index.js"
 	},
 	"manufacturer": "Audivero",
-	"products": [
-		"Unity Intercom Client"
-	],
-	"keywords": [
-		"Intercom"
-	]
+	"products": ["Unity Intercom Client"],
+	"keywords": ["Intercom"]
 }

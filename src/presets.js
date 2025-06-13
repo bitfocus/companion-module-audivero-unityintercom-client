@@ -1,10 +1,10 @@
-const { combineRgb } = require('@companion-module/base');
+const { combineRgb } = require('@companion-module/base')
 
 module.exports = {
 	initPresets: function () {
-		let self = this;
+		let self = this
 
-		let presets = [];
+		let presets = []
 
 		const foregroundColor = combineRgb(255, 255, 255) // White
 		const foregroundColorBlack = combineRgb(0, 0, 0) // Black
@@ -16,12 +16,12 @@ module.exports = {
 			presets.push({
 				type: 'button',
 				category: 'Buttons',
-				name: 'Button ' + (i+1),
+				name: 'Button ' + (i + 1),
 				style: {
-					text: `$(unityintercom-client:button_${(i+1)}_text)`,
+					text: `$(unityintercom-client:button_${i + 1}_text)`,
 					size: '14',
 					color: '16777215',
-					bgcolor: combineRgb(0, 0, 0)
+					bgcolor: combineRgb(0, 0, 0),
 				},
 				steps: [
 					{
@@ -29,19 +29,19 @@ module.exports = {
 							{
 								actionId: 'button_press',
 								options: {
-									button: i
-								}
-							}
+									button: i,
+								},
+							},
 						],
 						up: [
 							{
 								actionId: 'button_release',
 								options: {
-									button: i
-								}
-							}
-						]
-					}
+									button: i,
+								},
+							},
+						],
+					},
 				],
 				feedbacks: [
 					{
@@ -51,13 +51,13 @@ module.exports = {
 						},
 						style: {
 							color: foregroundColor,
-							bgcolor: backgroundColorBlue
-						}
-					}
-				]
-			});
+							bgcolor: backgroundColorBlue,
+						},
+					},
+				],
+			})
 		}
-		
-		self.setPresetDefinitions(presets);
-	}
+
+		self.setPresetDefinitions(presets)
+	},
 }

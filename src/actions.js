@@ -1,7 +1,7 @@
 module.exports = {
 	initActions: function () {
-		let self = this;
-		let actions = {};
+		let self = this
+		let actions = {}
 
 		actions.button_press = {
 			name: 'Press Button',
@@ -11,18 +11,18 @@ module.exports = {
 					label: 'Button',
 					id: 'button',
 					default: '0',
-					choices: self.CHOICES_BUTTONS
-				}
+					choices: self.CHOICES_BUTTONS,
+				},
 			],
-			callback: async function(action) {
-				let cmdObj = {};
-				let cmd;
-				cmdObj.Type = 'Keydown';
-				cmdObj.Button = parseInt(action.options.button);
-				cmd = JSON.stringify(cmdObj);
-				self.sendCommand(cmd);
-			}
-		};
+			callback: async function (action) {
+				let cmdObj = {}
+				let cmd
+				cmdObj.Type = 'Keydown'
+				cmdObj.Button = parseInt(action.options.button)
+				cmd = JSON.stringify(cmdObj)
+				self.sendCommand(cmd)
+			},
+		}
 
 		actions.button_release = {
 			name: 'Release Button',
@@ -32,19 +32,19 @@ module.exports = {
 					label: 'Button',
 					id: 'button',
 					default: '0',
-					choices: self.CHOICES_BUTTONS
-				}
+					choices: self.CHOICES_BUTTONS,
+				},
 			],
-			callback: async function(action) {
-				let cmdObj = {};
-				let cmd;
-				cmdObj.Type = 'Keyup';
-				cmdObj.Button = parseInt(action.options.button);
-				cmd = JSON.stringify(cmdObj);
-				self.sendCommand(cmd);
-			}
+			callback: async function (action) {
+				let cmdObj = {}
+				let cmd
+				cmdObj.Type = 'Keyup'
+				cmdObj.Button = parseInt(action.options.button)
+				cmd = JSON.stringify(cmdObj)
+				self.sendCommand(cmd)
+			},
 		}
-		
-		self.setActionDefinitions(actions);
-	}
+
+		self.setActionDefinitions(actions)
+	},
 }
