@@ -33,11 +33,7 @@ module.exports = {
 				id: 'info2',
 				label: 'Verbose Logging',
 				width: 12,
-				value: `
-					<div class="alert alert-info">
-						Enabling this option will put more detail in the log, which can be useful for troubleshooting purposes.
-					</div>
-				`
+				value: `Enabling this option will put more detail in the log, which can be useful for troubleshooting purposes.`
 			},
 			{
 				type: 'checkbox',
