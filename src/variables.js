@@ -11,6 +11,13 @@ module.exports = {
 			variables.push(variableObj)
 		}
 
+		for (let i = 0; i < self.VARIABLES.length; i++) {
+			variables.push({
+				variableId: self.VARIABLES[i].variableId,
+				name: self.VARIABLES[i].name,
+			})
+		}
+
 		self.setVariableDefinitions(variables)
 
 		let variableObj = {}

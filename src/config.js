@@ -29,6 +29,14 @@ module.exports = {
 				regex: Regex.PORT,
 			},
 			{
+				type: 'number',
+				id: 'buttonCount',
+				label: 'Number of Available Unity Buttons',
+				default: 80,
+				min: 1,
+				max: 300,
+			},
+			{
 				type: 'static-text',
 				id: 'info2',
 				label: 'Verbose Logging',

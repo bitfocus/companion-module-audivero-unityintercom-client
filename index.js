@@ -33,6 +33,19 @@ class unityintercomInstance extends InstanceBase {
 		this.CHOICES_BUTTONS = []
 
 		this.POLL_TIMER = null
+
+		this.VARIABLES = []
+
+		this.FIRST_POLL = true
+
+		this.DEVICEID = 'companion-' + this.id
+
+		this.heldKey = null
+		this.keyHoldTimer = null
+		this.keySessionToken = null
+
+		this.udpQueue = []
+		this.udpSending = false
 	}
 
 	async destroy() {
@@ -67,9 +80,9 @@ class unityintercomInstance extends InstanceBase {
 
 		this.updateStatus(InstanceStatus.Connecting)
 
-		this.init_keystates()
+		this.initKeystates()
 
-		this.init_udp()
+		this.initConnection()
 
 		this.initActions()
 		this.initFeedbacks()

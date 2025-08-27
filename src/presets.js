@@ -45,18 +45,204 @@ module.exports = {
 				],
 				feedbacks: [
 					{
-						feedbackId: 'blue',
+						feedbackId: 'color',
 						options: {
 							button: i,
+							color: 'red',
+						},
+						style: {
+							color: foregroundColor,
+							bgcolor: backgroundColorRed,
+						},
+					},
+					{
+						feedbackId: 'color',
+						options: {
+							button: i,
+							color: 'blue',
 						},
 						style: {
 							color: foregroundColor,
 							bgcolor: backgroundColorBlue,
 						},
 					},
+					{
+						feedbackId: 'color',
+						options: {
+							button: i,
+							color: 'green',
+						},
+						style: {
+							color: foregroundColor,
+							bgcolor: backgroundColorGreen,
+						},
+					},
+					{
+						feedbackId: 'color',
+						options: {
+							button: i,
+							color: 'purple',
+						},
+						style: {
+							color: foregroundColor,
+							bgcolor: combineRgb(128, 0, 128), // Purple
+						},
+					},
+					{
+						feedbackId: 'color',
+						options: {
+							button: i,
+							color: 'pink',
+						},
+						style: {
+							color: foregroundColor,
+							bgcolor: combineRgb(255, 192, 203), // Pink
+						},
+					},
+					{
+						feedbackId: 'color',
+						options: {
+							button: i,
+							color: 'brown',
+						},
+						style: {
+							color: foregroundColor,
+							bgcolor: combineRgb(165, 42, 42), // Brown
+						},
+					},
 				],
 			})
 		}
+
+		//presets for set channel volume, buttons 1-6
+		for (let i = 0; i < 6; i++) {
+			presets.push({
+				type: 'button',
+				category: 'Channel Volume',
+				name: `Set Volume - Button ${i + 1}`,
+				style: {
+					text: `Ch Vol ${(i + 1).toString()}`,
+					size: '18',
+					color: foregroundColorBlack,
+					bgcolor: backgroundColorGreen,
+					show_topbar: false,
+				},
+				options: {
+					rotaryActions: true,
+				},
+				steps: [
+					{
+						down: [],
+						up: [],
+						rotate_left: [
+							{
+								actionId: 'channelListenVolume',
+								options: {
+									button: i,
+									direction: 'left',
+									steps: 1,
+								},
+							},
+						],
+						rotate_right: [
+							{
+								actionId: 'channelListenVolume',
+								options: {
+									button: i,
+									direction: 'right',
+									steps: 1,
+								},
+							},
+						],
+					},
+				],
+			})
+		}
+
+		//preset for system volume and program volume
+		presets.push({
+			type: 'button',
+			category: 'Volume',
+			name: 'Set System Volume',
+			style: {
+				text: 'Sys Vol',
+				size: '18',
+				color: foregroundColorBlack,
+				bgcolor: backgroundColorGreen,
+				show_topbar: false,
+			},
+			options: {
+				rotaryActions: true,
+			},
+			steps: [
+				{
+					down: [],
+					up: [],
+					rotate_left: [
+						{
+							actionId: 'rotate',
+							options: {
+								button: 0,
+								direction: 'left',
+								steps: 1,
+							},
+						},
+					],
+					rotate_right: [
+						{
+							actionId: 'rotate',
+							options: {
+								button: 0,
+								direction: 'right',
+								steps: 1,
+							},
+						},
+					],
+				},
+			],
+		})
+
+		presets.push({
+			type: 'button',
+			category: 'Volume',
+			name: 'Set Program Volume',
+			style: {
+				text: 'Pgm Vol',
+				size: '18',
+				color: foregroundColorBlack,
+				bgcolor: backgroundColorGreen,
+				show_topbar: false,
+			},
+			options: {
+				rotaryActions: true,
+			},
+			steps: [
+				{
+					down: [],
+					up: [],
+					rotate_left: [
+						{
+							actionId: 'setProgramVolume',
+							options: {
+								button: 0,
+								direction: 'left',
+								steps: 1,
+							},
+						},
+					],
+					rotate_right: [
+						{
+							actionId: 'setProgramVolume',
+							options: {
+								button: 0,
+								direction: 'right',
+								steps: 1,
+							},
+						},
+					],
+				},
+			],
+		})
 
 		self.setPresetDefinitions(presets)
 	},
