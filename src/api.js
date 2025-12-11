@@ -1,4 +1,5 @@
 const { InstanceStatus } = require('@companion-module/base')
+const dgram = require('dgram')
 
 const VERSION = require('../package.json').version
 
@@ -17,12 +18,17 @@ module.exports = {
 		if (self.config.host !== undefined) {
 			try {
 				self.log('info', `Starting UDP Connection to Unity  Client: ${self.config.host}:${self.config.port}`)
-				self.udp = self.createSharedUdpSocket('udp4', (msg, rinfo) => self.checkMessage(self, msg, rinfo))
+				self.udp = dgram.createSocket('udp4')
 				self.udp.bind(self.config.port)
 
 				self.udp.on('error', function (err) {
 					self.updateStatus(InstanceStatus.ConnectionFailure)
 					self.log('error', 'Network error: ' + err.message)
+				})
+
+				self.udp.on('message', function (msg, rinfo) {
+					// Use the existing checkMessage path to preserve host checks and remote port handling
+					self.checkMessage(self, msg, rinfo)
 				})
 			} catch (error) {
 				self.log('error', 'Error binding UDP Port: ' + error)
@@ -185,7 +191,7 @@ module.exports = {
 				//console.log(objJson)
 			}
 
-			if (objJson.DeviceID !== self.DEVICEID) {
+			if (objJson.DeviceID && objJson.DeviceID !== self.DEVICEID) {
 				//this message isn't for us
 				self.log('warn', `Ignoring message intended for another device: ${objJson.DeviceID}`)
 				return
@@ -248,13 +254,12 @@ module.exports = {
 
 		let responseObj = {
 			Type: 'Poll',
-			Name: `Companion - ${self.id}`,
+			Name: 'Companion Module',
 			Rows: 4,
 			Columns: 8,
 			Update: 0,
-			ProductID: 9007,
+			ProductID: 9002,
 			Version: VERSION,
-			DeviceID: self.DEVICEID,
 		}
 
 		if (self.udp) {
@@ -329,7 +334,17 @@ module.exports = {
 
 		for (let i = 0; i < self.keyStates.length; i++) {
 			if (self.keyStates[i].buttonNumber === buttonNumber) {
-				self.keyStates[i][color] = value
+				// Normalize incoming value to a boolean so feedback callbacks work
+				// Unity sends 1/0 for on/off; ensure we store true/false
+				let boolVal = false
+				if (typeof value === 'number') {
+					boolVal = value === 1
+				} else if (typeof value === 'string') {
+					boolVal = Number(value) === 1
+				} else {
+					boolVal = !!value
+				}
+				self.keyStates[i][color] = boolVal
 				break
 			}
 		}
