@@ -1,5 +1,4 @@
 const { InstanceStatus } = require('@companion-module/base')
-const dgram = require('dgram')
 
 const VERSION = require('../package.json').version
 
@@ -18,7 +17,7 @@ module.exports = {
 		if (self.config.host !== undefined) {
 			try {
 				self.log('info', `Starting UDP Connection to Unity  Client: ${self.config.host}:${self.config.port}`)
-				self.udp = dgram.createSocket('udp4')
+				self.udp = self.createSharedUdpSocket('udp4', (msg, rinfo) => self.checkMessage(self, msg, rinfo))
 				self.udp.bind(self.config.port)
 
 				self.udp.on('error', function (err) {
@@ -258,7 +257,7 @@ module.exports = {
 			Rows: 4,
 			Columns: 8,
 			Update: 0,
-			ProductID: 9002,
+			ProductID: 9007,
 			Version: VERSION,
 		}
 
