@@ -246,13 +246,17 @@ module.exports = {
 
 		self.POLL_TIMER = setTimeout(self.RegisterDisconnect.bind(self), 10000)
 
+		// ProductID values:
+		// 9000 = StreamDeck Original, 9001 = StreamDeck Mini, 9002 = StreamDeck XL,
+		// 9003 = StreamDeck Mobile, 9004 = StreamDeck Plus, 9009 = StreamDeck Neo,
+		// 9010 = StreamDeck Studio, 9013 = StreamDeck Plus XL
 		let responseObj = {
 			Type: 'Poll',
 			Name: `Companion - ${self.id}`,
 			Rows: 4,
 			Columns: 8,
 			Update: 0,
-			ProductID: 9007,
+			ProductID: 9013,
 			Version: VERSION,
 			DeviceID: self.DEVICEID,
 		}
@@ -299,10 +303,12 @@ module.exports = {
 		//for now let's just declare the variableId as the name minus any invalid characters
 		//we don't really know what properties are available until they come in, so if it's something we haven't received before, let's re initialize the variables before setting the value
 
+		if (text === undefined || text === null || text === '') return
+
 		//
 		let variableId = text.toLowerCase().replace(/[^a-z0-9_]/g, '_')
 		let variableName = text
-		let variableValue = label
+		let variableValue = label !== undefined && label !== null ? String(label) : ''
 
 		//search self.VARIABLES to see if variableId exists
 		let variableExists = false
@@ -329,7 +335,7 @@ module.exports = {
 
 		for (let i = 0; i < self.keyStates.length; i++) {
 			if (self.keyStates[i].buttonNumber === buttonNumber) {
-				self.keyStates[i][color] = value
+				self.keyStates[i][color] = value === 1 || value === true
 				break
 			}
 		}
