@@ -43,10 +43,7 @@ module.exports = {
 			// Send keydown immediately, then insert a forced wait
 			self.udpQueue.push({
 				data: cmd,
-				delayAfter: 0,
-			})
-			self.udpQueue.push({
-				wait: 200, // use 1000 if Unity client is very slow to register keydown
+				delayAfter: 50,
 			})
 		} else if (cmd.Type === 'Dialdown') {
 			// Send dialdown immediately, then insert a forced wait
