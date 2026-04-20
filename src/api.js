@@ -300,12 +300,11 @@ module.exports = {
 		//for now let's just declare the variableId as the name minus any invalid characters
 		//we don't really know what properties are available until they come in, so if it's something we haven't received before, let's re initialize the variables before setting the value
 
-		if (text === undefined || text === null || text === '') return
 
 		//
 		let variableId = text.toLowerCase().replace(/[^a-z0-9_]/g, '_')
 		let variableName = text
-		let variableValue = label !== undefined && label !== null ? String(label) : ''
+		let variableValue = label
 
 		//search self.VARIABLES to see if variableId exists
 		let variableExists = false
