@@ -38,8 +38,50 @@ module.exports = {
 		return parseInt(crypto.createHash('md5').update(signature).digest('hex').slice(0, 6), 16)
 	},
 
+	closeConnection: function () {
+		let self = this
+
+		//the pending disconnect timer belongs to the connection we are tearing down,
+		//otherwise it fires later and marks a freshly reconnecting instance as errored
+		if (self.POLL_TIMER !== null) {
+			clearTimeout(self.POLL_TIMER)
+			self.POLL_TIMER = null
+		}
+
+		const socket = self.udp
+		self.udp = null
+
+		if (!socket) {
+			return
+		}
+
+		//stop handling messages from the old socket right away, even if the close below fails,
+		//otherwise every inbound packet gets processed once per socket we ever created
+		socket.removeAllListeners('message')
+		socket.removeAllListeners('error')
+
+		try {
+			socket.close()
+		} catch (error) {
+			//close() throws if the socket is already closed, or hasn't finished binding yet
+			//in the latter case, close it as soon as it is actually bound
+			socket.once('listening', function () {
+				try {
+					socket.close()
+				} catch (closeError) {
+					//nothing more we can do with this socket
+				}
+			})
+		}
+	},
+
 	initConnection: function () {
 		let self = this
+
+		self.closeConnection()
+
+		//this is a brand new connection, so the next poll we receive should take us back to Ok
+		self.FIRST_POLL = true
 
 		self.updateStatus(InstanceStatus.Connecting)
 
@@ -272,7 +314,7 @@ module.exports = {
 		let self = this
 
 		if (self.POLL_TIMER !== null) {
-			clearInterval(self.POLL_TIMER)
+			clearTimeout(self.POLL_TIMER)
 			self.POLL_TIMER = null
 		}
 
@@ -311,7 +353,7 @@ module.exports = {
 		self.log('error', 'Client has stopped responding.')
 
 		if (self.POLL_TIMER !== null) {
-			clearInterval(self.POLL_TIMER)
+			clearTimeout(self.POLL_TIMER)
 			self.POLL_TIMER = null
 		}
 	},

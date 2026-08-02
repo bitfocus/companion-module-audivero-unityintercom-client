@@ -51,20 +51,7 @@ class unityintercomInstance extends InstanceBase {
 	async destroy() {
 		let self = this
 
-		if (self.POLL_TIMER !== null) {
-			clearInterval(self.POLL_TIMER)
-			self.POLL_TIMER = null
-		}
-
-		if (self.udp !== undefined) {
-			try {
-				self.udp.close()
-			} catch (error) {
-				debug('Error closing UDP port')
-			} finally {
-				self.udp = null
-			}
-		}
+		self.closeConnection()
 	}
 
 	async init(config) {
