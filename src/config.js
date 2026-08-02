@@ -1,5 +1,7 @@
 const { Regex } = require('@companion-module/base')
 
+const { CHOICES_SURFACE_MODELS, DEFAULT_SURFACE_MODEL } = require('./models')
+
 module.exports = {
 	getConfigFields() {
 		let self = this
@@ -29,12 +31,30 @@ module.exports = {
 				regex: Regex.PORT,
 			},
 			{
+				type: 'static-text',
+				id: 'info3',
+				label: 'Surface Model',
+				width: 12,
+				value: `The Unity client lays out its panel configuration from the model we report, and calculates button numbers from that model's grid. Pick the model whose layout you want; choose a Stream Deck + or Plus XL if you need the dial actions.`,
+			},
+			{
+				type: 'dropdown',
+				id: 'surfaceModel',
+				label: 'Surface Model',
+				default: DEFAULT_SURFACE_MODEL,
+				choices: CHOICES_SURFACE_MODELS,
+				width: 6,
+			},
+			{
 				type: 'number',
 				id: 'buttonCount',
 				label: 'Number of Available Unity Buttons',
+				tooltip:
+					'How many buttons to offer in the action and feedback dropdowns. The Unity client can address more buttons than one page of the surface holds, so this can exceed the model grid size.',
 				default: 80,
 				min: 1,
 				max: 300,
+				width: 6,
 			},
 			{
 				type: 'number',

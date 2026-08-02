@@ -1,6 +1,8 @@
 const { InstanceStatus } = require('@companion-module/base')
 const crypto = require('crypto')
 
+const { getSurfaceModel } = require('./models')
+
 //the Version field in the poll response is the *protocol* version, not our module version.
 //The Unity spec requires 1.4 or later here to signal that the DeviceID-based protocol
 //is supported - sending our package version instead is not what the client is looking for.
@@ -21,6 +23,19 @@ module.exports = {
 			.createHash('md5')
 			.update('companion-' + self.id)
 			.digest('hex')
+	},
+
+	//The spec's Update field is the panel's layout version: "if the number changes, it
+	//forces us to resend all text and color information to the panel". We had this pinned
+	//at 0, so a layout change never triggered a resend. Derive it from the layout itself so
+	//it changes whenever the layout does, and stays put across restarts when it hasn't.
+	getLayoutVersion: function () {
+		let self = this
+
+		let model = getSurfaceModel(self.config.surfaceModel)
+		let signature = [model.productId, model.rows, model.columns, self.API_BUTTONS].join(':')
+
+		return parseInt(crypto.createHash('md5').update(signature).digest('hex').slice(0, 6), 16)
 	},
 
 	initConnection: function () {
@@ -268,17 +283,16 @@ module.exports = {
 
 		self.POLL_TIMER = setTimeout(self.RegisterDisconnect.bind(self), 10000)
 
-		//ProductID 9007 presents us to the client as a Stream Deck +, which is what enables
-		//the rotary/dial actions. The protocol doc's table lists Stream Deck Plus as 9004,
-		//but the doc's own worked example shows 9007 for a Stream Deck +, and 9007 is what
-		//has actually been observed to work. Leave it until Unity clarifies.
+		//ProductID and the grid must always come from the same model entry - see src/models.js
+		let model = getSurfaceModel(self.config.surfaceModel)
+
 		let responseObj = {
 			Type: 'Poll',
 			Name: `Companion - ${self.id}`,
-			Rows: 4,
-			Columns: 8,
-			Update: 0,
-			ProductID: 9007,
+			Rows: model.rows,
+			Columns: model.columns,
+			Update: self.getLayoutVersion(),
+			ProductID: model.productId,
 			Version: PROTOCOL_VERSION,
 			DeviceID: self.DEVICEID,
 		}

@@ -8,6 +8,7 @@ This module will allow you to remotely operate the Unity Intercom client running
 - The device will use UDP port 20119.
 - If it is not the same as the local computer, you will need to enter the Companion computer's IP address in the Unity Client settings. See [this article]([https://www.unityintercom.com/unity-tech-notes/remote-stream-deck-control-for-mac-and-windows-clients).
 - "Press Hold Time" controls how long the module waits between sending a press and its matching release. The default of 50ms suits most clients. If short presses (like selecting a listen channel) are not registering, raise this value.
+- "Surface Model" controls which Stream Deck model the module reports itself as. The Unity client builds its panel configuration screen from this, and calculates button numbers from the model's grid, so it must match the layout you want. The default is Stream Deck XL (4x8). Choose "Stream Deck +" or "Stream Deck Plus XL" if you need the dial actions, keeping in mind that a Stream Deck + is only a 2x4 grid.
 
 **Available Actions:**
 The module functions by sending button presses to the Unity client API.
