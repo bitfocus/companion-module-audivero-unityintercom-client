@@ -1,14 +1,91 @@
 const { InstanceStatus } = require('@companion-module/base')
+const crypto = require('crypto')
 
-const VERSION = require('../package.json').version
+const { getSurfaceModel } = require('./models')
+
+//the Version field in the poll response is the *protocol* version, not our module version.
+//The Unity spec requires 1.4 or later here to signal that the DeviceID-based protocol
+//is supported - sending our package version instead is not what the client is looking for.
+const PROTOCOL_VERSION = '1.4'
 
 module.exports = {
+	//The spec calls for a GUID uniquely identifying the attached panel, formatted as
+	//32 hex characters. Derive it from the Companion connection id so it is unique per
+	//instance and stable across restarts without needing to be persisted.
+	getDeviceId: function () {
+		let self = this
+
+		if (self.config.deviceId) {
+			return self.config.deviceId
+		}
+
+		return crypto
+			.createHash('md5')
+			.update('companion-' + self.id)
+			.digest('hex')
+	},
+
+	//The spec's Update field is the panel's layout version: "if the number changes, it
+	//forces us to resend all text and color information to the panel". We had this pinned
+	//at 0, so a layout change never triggered a resend. Derive it from the layout itself so
+	//it changes whenever the layout does, and stays put across restarts when it hasn't.
+	getLayoutVersion: function () {
+		let self = this
+
+		let model = getSurfaceModel(self.config.surfaceModel)
+		let signature = [model.productId, model.rows, model.columns, self.API_BUTTONS].join(':')
+
+		return parseInt(crypto.createHash('md5').update(signature).digest('hex').slice(0, 6), 16)
+	},
+
+	closeConnection: function () {
+		let self = this
+
+		//the pending disconnect timer belongs to the connection we are tearing down,
+		//otherwise it fires later and marks a freshly reconnecting instance as errored
+		if (self.POLL_TIMER !== null) {
+			clearTimeout(self.POLL_TIMER)
+			self.POLL_TIMER = null
+		}
+
+		const socket = self.udp
+		self.udp = null
+
+		if (!socket) {
+			return
+		}
+
+		//stop handling messages from the old socket right away, even if the close below fails,
+		//otherwise every inbound packet gets processed once per socket we ever created
+		socket.removeAllListeners('message')
+		socket.removeAllListeners('error')
+
+		try {
+			socket.close()
+		} catch (error) {
+			//close() throws if the socket is already closed, or hasn't finished binding yet
+			//in the latter case, close it as soon as it is actually bound
+			socket.once('listening', function () {
+				try {
+					socket.close()
+				} catch (closeError) {
+					//nothing more we can do with this socket
+				}
+			})
+		}
+	},
+
 	initConnection: function () {
 		let self = this
 
+		self.closeConnection()
+
+		//this is a brand new connection, so the next poll we receive should take us back to Ok
+		self.FIRST_POLL = true
+
 		self.updateStatus(InstanceStatus.Connecting)
 
-		self.DEVICEID = 'companion-' + self.id
+		self.DEVICEID = self.getDeviceId()
 
 		if (!self.config.port) {
 			self.config.port = 20119
@@ -30,6 +107,14 @@ module.exports = {
 		}
 	},
 
+	getPressDelay: function () {
+		let self = this
+
+		let pressDelay = parseInt(self.config.pressDelay)
+
+		return isNaN(pressDelay) ? 50 : pressDelay
+	},
+
 	sendCommand: function (cmd) {
 		let self = this
 
@@ -39,23 +124,14 @@ module.exports = {
 		let delayAfter = 50
 
 		// Special handling for certain types
-		if (cmd.Type === 'Keydown') {
-			// Send keydown immediately, then insert a forced wait
+		if (cmd.Type === 'Keydown' || cmd.Type === 'Dialdown') {
+			// Send the down event, then wait just long enough for the client to register it.
+			// The wait must stay short: the matching keyup/dialup sits behind this in the queue,
+			// and holding it back too long makes a short press read as a hold in the Unity client.
+			// Raise the "Press Hold Time" config value if the client is slow to register presses.
 			self.udpQueue.push({
 				data: cmd,
-				delayAfter: 0,
-			})
-			self.udpQueue.push({
-				wait: 200, // use 1000 if Unity client is very slow to register keydown
-			})
-		} else if (cmd.Type === 'Dialdown') {
-			// Send dialdown immediately, then insert a forced wait
-			self.udpQueue.push({
-				data: cmd,
-				delayAfter: 0,
-			})
-			self.udpQueue.push({
-				wait: 200, // use 1000 if Unity client is very slow to register dialdown
+				delayAfter: self.getPressDelay(),
 			})
 		} else if (cmd.Type === 'Keyup') {
 			self.udpQueue.push({
@@ -105,7 +181,7 @@ module.exports = {
 				self.udp.send(message, self.config.remoteport, self.config.host)
 			}
 
-			delay = next.delayAfter || 50
+			delay = next.delayAfter ?? 50
 		} else if (next.wait) {
 			delay = next.wait
 		}
@@ -185,7 +261,10 @@ module.exports = {
 				//console.log(objJson)
 			}
 
-			if (objJson.DeviceID !== self.DEVICEID) {
+			//only filter on DeviceID if the client actually sent one back to us
+			//older/other Unity client versions omit it entirely, and dropping those messages
+			//silently kills all feedback (see issue #19)
+			if (objJson.DeviceID && objJson.DeviceID !== self.DEVICEID) {
 				//this message isn't for us
 				self.log('warn', `Ignoring message intended for another device: ${objJson.DeviceID}`)
 				return
@@ -235,7 +314,7 @@ module.exports = {
 		let self = this
 
 		if (self.POLL_TIMER !== null) {
-			clearInterval(self.POLL_TIMER)
+			clearTimeout(self.POLL_TIMER)
 			self.POLL_TIMER = null
 		}
 
@@ -246,14 +325,17 @@ module.exports = {
 
 		self.POLL_TIMER = setTimeout(self.RegisterDisconnect.bind(self), 10000)
 
+		//ProductID and the grid must always come from the same model entry - see src/models.js
+		let model = getSurfaceModel(self.config.surfaceModel)
+
 		let responseObj = {
 			Type: 'Poll',
 			Name: `Companion - ${self.id}`,
-			Rows: 4,
-			Columns: 8,
-			Update: 0,
-			ProductID: 9007,
-			Version: VERSION,
+			Rows: model.rows,
+			Columns: model.columns,
+			Update: self.getLayoutVersion(),
+			ProductID: model.productId,
+			Version: PROTOCOL_VERSION,
 			DeviceID: self.DEVICEID,
 		}
 
@@ -271,7 +353,7 @@ module.exports = {
 		self.log('error', 'Client has stopped responding.')
 
 		if (self.POLL_TIMER !== null) {
-			clearInterval(self.POLL_TIMER)
+			clearTimeout(self.POLL_TIMER)
 			self.POLL_TIMER = null
 		}
 	},
@@ -327,9 +409,21 @@ module.exports = {
 	setColor: function (color, buttonNumber, value) {
 		let self = this
 
+		//the client sends 1/0, and has also been seen sending "1"/"0" and true/false,
+		//so normalize to a real boolean here - the feedback callback compares with ===
+		let state = false
+
+		if (typeof value === 'number') {
+			state = value === 1
+		} else if (typeof value === 'string') {
+			state = Number(value) === 1
+		} else {
+			state = !!value
+		}
+
 		for (let i = 0; i < self.keyStates.length; i++) {
 			if (self.keyStates[i].buttonNumber === buttonNumber) {
-				self.keyStates[i][color] = value
+				self.keyStates[i][color] = state
 				break
 			}
 		}

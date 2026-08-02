@@ -38,7 +38,7 @@ class unityintercomInstance extends InstanceBase {
 
 		this.FIRST_POLL = true
 
-		this.DEVICEID = 'companion-' + this.id
+		this.DEVICEID = null //set in initConnection, once config is available
 
 		this.heldKey = null
 		this.keyHoldTimer = null
@@ -51,20 +51,7 @@ class unityintercomInstance extends InstanceBase {
 	async destroy() {
 		let self = this
 
-		if (self.POLL_TIMER !== null) {
-			clearInterval(self.POLL_TIMER)
-			self.POLL_TIMER = null
-		}
-
-		if (self.udp !== undefined) {
-			try {
-				self.udp.close()
-			} catch (error) {
-				debug('Error closing UDP port')
-			} finally {
-				self.udp = null
-			}
-		}
+		self.closeConnection()
 	}
 
 	async init(config) {
