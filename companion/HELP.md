@@ -7,6 +7,7 @@ This module will allow you to remotely operate the Unity Intercom client running
 - Enter the IP Address of the Unity Intercom Client in the configuration settings.
 - The device will use UDP port 20119.
 - If it is not the same as the local computer, you will need to enter the Companion computer's IP address in the Unity Client settings. See [this article]([https://www.unityintercom.com/unity-tech-notes/remote-stream-deck-control-for-mac-and-windows-clients).
+- "Press Hold Time" controls how long the module waits between sending a press and its matching release. The default of 50ms suits most clients. If short presses (like selecting a listen channel) are not registering, raise this value.
 
 **Available Actions:**
 The module functions by sending button presses to the Unity client API.

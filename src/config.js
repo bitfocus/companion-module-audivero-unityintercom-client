@@ -37,6 +37,17 @@ module.exports = {
 				max: 300,
 			},
 			{
+				type: 'number',
+				id: 'pressDelay',
+				label: 'Press Hold Time (ms)',
+				tooltip:
+					'How long to wait between a keydown/dialdown and the matching keyup/dialup. Increase this if the Unity client is slow to register short presses.',
+				default: 50,
+				min: 10,
+				max: 1000,
+				width: 6,
+			},
+			{
 				type: 'static-text',
 				id: 'info2',
 				label: 'Verbose Logging',

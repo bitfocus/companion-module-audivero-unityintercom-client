@@ -30,6 +30,14 @@ module.exports = {
 		}
 	},
 
+	getPressDelay: function () {
+		let self = this
+
+		let pressDelay = parseInt(self.config.pressDelay)
+
+		return isNaN(pressDelay) ? 50 : pressDelay
+	},
+
 	sendCommand: function (cmd) {
 		let self = this
 
@@ -39,23 +47,14 @@ module.exports = {
 		let delayAfter = 50
 
 		// Special handling for certain types
-		if (cmd.Type === 'Keydown') {
-			// Send keydown immediately, then insert a forced wait
+		if (cmd.Type === 'Keydown' || cmd.Type === 'Dialdown') {
+			// Send the down event, then wait just long enough for the client to register it.
+			// The wait must stay short: the matching keyup/dialup sits behind this in the queue,
+			// and holding it back too long makes a short press read as a hold in the Unity client.
+			// Raise the "Press Hold Time" config value if the client is slow to register presses.
 			self.udpQueue.push({
 				data: cmd,
-				delayAfter: 0,
-			})
-			self.udpQueue.push({
-				wait: 200, // use 1000 if Unity client is very slow to register keydown
-			})
-		} else if (cmd.Type === 'Dialdown') {
-			// Send dialdown immediately, then insert a forced wait
-			self.udpQueue.push({
-				data: cmd,
-				delayAfter: 0,
-			})
-			self.udpQueue.push({
-				wait: 200, // use 1000 if Unity client is very slow to register dialdown
+				delayAfter: self.getPressDelay(),
 			})
 		} else if (cmd.Type === 'Keyup') {
 			self.udpQueue.push({
@@ -105,7 +104,7 @@ module.exports = {
 				self.udp.send(message, self.config.remoteport, self.config.host)
 			}
 
-			delay = next.delayAfter || 50
+			delay = next.delayAfter ?? 50
 		} else if (next.wait) {
 			delay = next.wait
 		}
@@ -185,7 +184,10 @@ module.exports = {
 				//console.log(objJson)
 			}
 
-			if (objJson.DeviceID !== self.DEVICEID) {
+			//only filter on DeviceID if the client actually sent one back to us
+			//older/other Unity client versions omit it entirely, and dropping those messages
+			//silently kills all feedback (see issue #19)
+			if (objJson.DeviceID && objJson.DeviceID !== self.DEVICEID) {
 				//this message isn't for us
 				self.log('warn', `Ignoring message intended for another device: ${objJson.DeviceID}`)
 				return
@@ -246,6 +248,9 @@ module.exports = {
 
 		self.POLL_TIMER = setTimeout(self.RegisterDisconnect.bind(self), 10000)
 
+		//ProductID 9007 presents us to the client as a Stream Deck +, which is what enables
+		//the rotary/dial actions. It isn't in the published protocol docs, but the documented
+		//surface IDs don't expose the dial functions, so leave it unless retested.
 		let responseObj = {
 			Type: 'Poll',
 			Name: `Companion - ${self.id}`,
@@ -327,9 +332,21 @@ module.exports = {
 	setColor: function (color, buttonNumber, value) {
 		let self = this
 
+		//the client sends 1/0, and has also been seen sending "1"/"0" and true/false,
+		//so normalize to a real boolean here - the feedback callback compares with ===
+		let state = false
+
+		if (typeof value === 'number') {
+			state = value === 1
+		} else if (typeof value === 'string') {
+			state = Number(value) === 1
+		} else {
+			state = !!value
+		}
+
 		for (let i = 0; i < self.keyStates.length; i++) {
 			if (self.keyStates[i].buttonNumber === buttonNumber) {
-				self.keyStates[i][color] = value
+				self.keyStates[i][color] = state
 				break
 			}
 		}
