@@ -38,7 +38,7 @@ class unityintercomInstance extends InstanceBase {
 
 		this.FIRST_POLL = true
 
-		this.DEVICEID = 'companion-' + this.id
+		this.DEVICEID = null //set in initConnection, once config is available
 
 		this.heldKey = null
 		this.keyHoldTimer = null

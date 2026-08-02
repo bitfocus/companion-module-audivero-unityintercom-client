@@ -1,14 +1,34 @@
 const { InstanceStatus } = require('@companion-module/base')
+const crypto = require('crypto')
 
-const VERSION = require('../package.json').version
+//the Version field in the poll response is the *protocol* version, not our module version.
+//The Unity spec requires 1.4 or later here to signal that the DeviceID-based protocol
+//is supported - sending our package version instead is not what the client is looking for.
+const PROTOCOL_VERSION = '1.4'
 
 module.exports = {
+	//The spec calls for a GUID uniquely identifying the attached panel, formatted as
+	//32 hex characters. Derive it from the Companion connection id so it is unique per
+	//instance and stable across restarts without needing to be persisted.
+	getDeviceId: function () {
+		let self = this
+
+		if (self.config.deviceId) {
+			return self.config.deviceId
+		}
+
+		return crypto
+			.createHash('md5')
+			.update('companion-' + self.id)
+			.digest('hex')
+	},
+
 	initConnection: function () {
 		let self = this
 
 		self.updateStatus(InstanceStatus.Connecting)
 
-		self.DEVICEID = 'companion-' + self.id
+		self.DEVICEID = self.getDeviceId()
 
 		if (!self.config.port) {
 			self.config.port = 20119
@@ -249,8 +269,9 @@ module.exports = {
 		self.POLL_TIMER = setTimeout(self.RegisterDisconnect.bind(self), 10000)
 
 		//ProductID 9007 presents us to the client as a Stream Deck +, which is what enables
-		//the rotary/dial actions. It isn't in the published protocol docs, but the documented
-		//surface IDs don't expose the dial functions, so leave it unless retested.
+		//the rotary/dial actions. The protocol doc's table lists Stream Deck Plus as 9004,
+		//but the doc's own worked example shows 9007 for a Stream Deck +, and 9007 is what
+		//has actually been observed to work. Leave it until Unity clarifies.
 		let responseObj = {
 			Type: 'Poll',
 			Name: `Companion - ${self.id}`,
@@ -258,7 +279,7 @@ module.exports = {
 			Columns: 8,
 			Update: 0,
 			ProductID: 9007,
-			Version: VERSION,
+			Version: PROTOCOL_VERSION,
 			DeviceID: self.DEVICEID,
 		}
 
